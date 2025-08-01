@@ -2,8 +2,10 @@ import type { ScrapedData } from '../types/ScrapedData';
 
 export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
   try {
-    // Always use Netlify function
-    const apiUrl = '/.netlify/functions/scrape';
+    // Use different API endpoints for development and production
+    const apiUrl = import.meta.env.DEV 
+      ? 'http://localhost:3001/api/scrape'
+      : '/.netlify/functions/scrape';
       
     console.log('Scraping URL:', url);
     console.log('API URL:', apiUrl);
