@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -34,7 +34,7 @@ const scrapeWebsite = async (url) => {
       timeout: 10000
     });
 
-    const $ = cheerio.load(response.data);
+    const $ = load(response.data);
     const scrapedData = [];
 
     // Common selectors for different types of content
