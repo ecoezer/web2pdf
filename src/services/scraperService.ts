@@ -2,10 +2,8 @@ import type { ScrapedData } from '../types/ScrapedData';
 
 export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
   try {
-    // Use different API endpoints for development and production
-    const apiUrl = import.meta.env.DEV 
-      ? '/api/scrape'
-      : '/.netlify/functions/scrape';
+    // Always use the proxy endpoint in development
+    const apiUrl = '/api/scrape';
       
     console.log('Scraping URL:', url);
     console.log('API URL:', apiUrl);
@@ -24,15 +22,16 @@ export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
-        const errorText = await response.text();
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          errorMessage = errorText || errorMessage;
-        }
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
       } catch {
-        // If we can't read the response at all, use the default message
+        // If we can't parse JSON, try to get text
+        try {
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
+        } catch {
+          // Use default message if all else fails
+        }
       }
       console.error('Response error:', errorMessage);
       throw new Error(errorMessage);
@@ -43,6 +42,10 @@ export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
     return result.data || [];
   } catch (error) {
     console.error('Scraping service error:', error);
-    throw error;
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error('Unknown scraping error occurred');
+    }
   }
 }
