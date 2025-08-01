@@ -1,0 +1,1 @@
+{"name":"web2pdf","version":"1.0.0","description":"","main":"dist/index.js","scripts":{"build":"tsc"},"keywords":[],"author":"ecoezer","license":"ISC","devDependencies":{"typescript":"^5.0.0"}}
