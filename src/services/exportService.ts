@@ -57,11 +57,11 @@ export const exportToPDF = async (data: ScrapedData[], sourceUrl: string) => {
     }
 
     pdf.setFontSize(12);
-    pdf.setFont(undefined, 'bold');
+    pdf.setFont(pdf.getFont().fontName, 'bold');
     pdf.text(`${index + 1}. ${item.title || 'Başlık Yok'}`, 20, yPosition);
     yPosition += 8;
 
-    pdf.setFont(undefined, 'normal');
+    pdf.setFont(pdf.getFont().fontName, 'normal');
     pdf.setFontSize(10);
 
     // Add other fields

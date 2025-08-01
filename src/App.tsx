@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Globe, Download, FileText, Table } from 'lucide-react';
 import UrlInput from './components/UrlInput';
 import DataTable from './components/DataTable';
