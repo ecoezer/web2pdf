@@ -35,7 +35,8 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
       const data = await scrapeWebsite(url);
       onDataScraped(data, url);
     } catch (err) {
-      setError('Veri çekilirken bir hata oluştu. URL\'yi kontrol edin.');
+      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
+      setError(`Veri çekilirken bir hata oluştu: ${errorMessage}`);
       console.error('Scraping error:', err);
     } finally {
       onLoadingChange(false);

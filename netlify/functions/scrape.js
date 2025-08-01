@@ -237,6 +237,8 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    console.log('Function called with body:', event.body);
+    
     const { url } = JSON.parse(event.body);
 
     if (!url) {
@@ -260,6 +262,7 @@ exports.handler = async (event, context) => {
 
     console.log(`Scraping URL: ${url}`);
     const data = await scrapeWebsite(url);
+    console.log(`Scraped ${data.length} items`);
 
     return {
       statusCode: 200,
