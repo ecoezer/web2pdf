@@ -266,4 +266,12 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Web Scraper Backend running on port ${PORT}`);
   console.log(`📡 API endpoint: http://localhost:${PORT}/api/scrape`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use. Please stop the other process or change the port.`);
+    process.exit(1);
+  } else {
+    console.error('❌ Server failed to start:', err);
+    process.exit(1);
+  }
 });

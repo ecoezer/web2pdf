@@ -22,9 +22,16 @@ export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
     console.log('Response ok:', response.ok);
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Response error:', errorText);
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch {
+        const errorText = await response.text();
+        errorMessage = errorText || errorMessage;
+      }
+      console.error('Response error:', errorMessage);
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
