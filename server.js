@@ -1,7 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
-const cheerio = require('cheerio');
+import express from 'express';
+import cors from 'cors';
+import axios from 'axios';
+import cheerio from 'cheerio';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
