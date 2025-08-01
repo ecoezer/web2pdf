@@ -1,6 +1,6 @@
 import React from 'react';
 import { Download, FileText } from 'lucide-react';
-import { ScrapedData } from '../types/ScrapedData';
+import type { ScrapedData } from '../types/ScrapedData';
 import { exportToJSON, exportToPDF } from '../services/exportService';
 
 interface ExportButtonsProps {

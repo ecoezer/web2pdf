@@ -1,4 +1,4 @@
-import { ScrapedData } from '../types/ScrapedData';
+import type { ScrapedData } from '../types/ScrapedData';
 
 export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
   // Since we can't use server-side scraping in the browser, 

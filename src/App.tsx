@@ -3,7 +3,7 @@ import { Globe, Download, FileText, Table } from 'lucide-react';
 import UrlInput from './components/UrlInput';
 import DataTable from './components/DataTable';
 import ExportButtons from './components/ExportButtons';
-import { ScrapedData } from './types/ScrapedData';
+import type { ScrapedData } from './types/ScrapedData';
 import './App.css';
 
 function App() {

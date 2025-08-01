@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
-import { ScrapedData } from '../types/ScrapedData';
+import type { ScrapedData } from '../types/ScrapedData';
 
 interface DataTableProps {
   data: ScrapedData[];

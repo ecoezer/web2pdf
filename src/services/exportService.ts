@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { ScrapedData } from '../types/ScrapedData';
+import type { ScrapedData } from '../types/ScrapedData';
 
 export const exportToJSON = (data: ScrapedData[], sourceUrl: string) => {
   const exportData = {

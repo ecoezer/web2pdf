@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, AlertCircle } from 'lucide-react';
-import { ScrapedData } from '../types/ScrapedData';
+import type { ScrapedData } from '../types/ScrapedData';
 import { scrapeWebsite } from '../services/scraperService';
 
 interface UrlInputProps {
