@@ -21,4 +21,3 @@ export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
     throw error;
   }
 };
-};
