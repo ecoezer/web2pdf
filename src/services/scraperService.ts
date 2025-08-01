@@ -4,7 +4,7 @@ export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
   try {
     // Use different API endpoints for development and production
     const apiUrl = import.meta.env.DEV 
-      ? 'http://localhost:3001/api/scrape'
+      ? '/api/scrape'
       : '/.netlify/functions/scrape';
       
     console.log('Scraping URL:', url);
