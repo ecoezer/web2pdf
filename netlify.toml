@@ -1,11 +1,12 @@
 [build]
-  functions = "functions"
-  publish = "dist"
+functions = "functions"
+publish = "dist"
+command = "npm run build"
 
 [functions]
-  node_bundler = "esbuild"
+node_bundler = "esbuild"
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/*"
+to = "/index.html"
+status = 200
