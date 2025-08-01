@@ -2,7 +2,12 @@ import type { ScrapedData } from '../types/ScrapedData';
 
 export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
   try {
-    const response = await fetch('http://localhost:3001/api/scrape', {
+    // Use Netlify function in production, localhost in development
+    const apiUrl = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3001/api/scrape'
+      : '/.netlify/functions/scrape';
+      
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
