@@ -44,9 +44,9 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
       {/* Results Table */}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
-        <div className={`text-white py-4 ${
+        <div className={`text-white py-6 ${
           isStatisticsData 
-            ? 'bg-gradient-to-r from-blue-700 to-blue-800'
+            ? 'bg-blue-800'
             : 'bg-gradient-to-r from-blue-600 to-blue-700'
         }`}>
           <h2 className="text-xl font-bold text-center flex items-center justify-center">
@@ -65,64 +65,60 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
         </div>
         
         {/* Table Content */}
-        <div className="divide-y divide-gray-100">
+        <div className={isStatisticsData ? "divide-y divide-gray-200 bg-white" : "divide-y divide-gray-100"}>
           {currentData.map((item, index) => (
-            <div key={item.id || index} className="bg-white py-4 px-6 hover:bg-gray-50 transition-colors">
+            <div key={item.id || index} className={`py-4 px-6 transition-colors ${
+              isStatisticsData 
+                ? "bg-white hover:bg-gray-25" 
+                : "bg-white hover:bg-gray-50"
+            }`}>
               {isStatisticsData ? (
                 /* Statistics Layout - Matching the image */
-                <div className="flex items-center">
-                  {/* Home Team Progress Bar and Value */}
+                <div className="flex items-center bg-gray-50 py-3 px-4 rounded-lg">
+                  {/* Left side - Home team progress bar and value */}
                   <div className="flex items-center flex-1">
-                    <div className="flex items-center w-full">
-                      {/* Progress Bar Container */}
-                      <div className="flex-1 flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-6 mr-4 relative overflow-hidden">
-                          {(() => {
-                            const { homePercent } = calculatePercentage(item.homeValue || '0', item.awayValue || '0');
-                            return (
-                              <div 
-                                className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 rounded-full transition-all duration-500 ease-out"
-                                style={{ width: `${homePercent}%` }}
-                              />
-                            );
-                          })()}
-                        </div>
-                        {/* Home Value */}
-                        <div className="text-blue-700 font-bold text-lg min-w-[60px] text-right">
-                          {item.homeValue || '0'}
-                        </div>
-                      </div>
+                    {/* Home Value */}
+                    <div className="text-blue-800 font-bold text-lg min-w-[80px] text-right mr-3">
+                      {item.homeValue || '0'}
+                    </div>
+                    {/* Home Progress Bar */}
+                    <div className="flex-1 bg-blue-100 rounded-sm h-6 mr-4 relative overflow-hidden">
+                      {(() => {
+                        const { homePercent } = calculatePercentage(item.homeValue || '0', item.awayValue || '0');
+                        return (
+                          <div 
+                            className="bg-blue-600 h-6 transition-all duration-700 ease-out"
+                            style={{ width: `${homePercent}%` }}
+                          />
+                        );
+                      })()}
                     </div>
                   </div>
 
-                  {/* Statistic Name - Center */}
-                  <div className="px-8 text-center min-w-[200px]">
-                    <div className="text-gray-800 font-semibold text-base">
+                  {/* Center - Statistic Name */}
+                  <div className="px-6 text-center min-w-[180px]">
+                    <div className="text-gray-800 font-semibold text-base whitespace-nowrap">
                       {item.statistic || item.title || 'İstatistik'}
                     </div>
                   </div>
 
-                  {/* Away Team Progress Bar and Value */}
+                  {/* Right side - Away team progress bar and value */}
                   <div className="flex items-center flex-1">
-                    <div className="flex items-center w-full">
-                      {/* Away Value */}
-                      <div className="text-orange-600 font-bold text-lg min-w-[60px] text-left mr-4">
-                        {item.awayValue || '0'}
-                      </div>
-                      {/* Progress Bar Container */}
-                      <div className="flex-1">
-                        <div className="w-full bg-gray-200 rounded-full h-6 relative overflow-hidden">
-                          {(() => {
-                            const { awayPercent } = calculatePercentage(item.homeValue || '0', item.awayValue || '0');
-                            return (
-                              <div 
-                                className="bg-gradient-to-r from-orange-400 to-orange-500 h-6 rounded-full transition-all duration-500 ease-out"
-                                style={{ width: `${awayPercent}%` }}
-                              />
-                            );
-                          })()}
-                        </div>
-                      </div>
+                    {/* Away Progress Bar */}
+                    <div className="flex-1 bg-orange-100 rounded-sm h-6 ml-4 relative overflow-hidden">
+                      {(() => {
+                        const { awayPercent } = calculatePercentage(item.homeValue || '0', item.awayValue || '0');
+                        return (
+                          <div 
+                            className="bg-orange-500 h-6 transition-all duration-700 ease-out"
+                            style={{ width: `${awayPercent}%` }}
+                          />
+                        );
+                      })()}
+                    </div>
+                    {/* Away Value */}
+                    <div className="text-orange-600 font-bold text-lg min-w-[80px] text-left ml-3">
+                      {item.awayValue || '0'}
                     </div>
                   </div>
                 </div>
