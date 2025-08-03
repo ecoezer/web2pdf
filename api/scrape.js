@@ -16,7 +16,7 @@ const resolveUrl = (baseUrl, relativeUrl) => {
 };
 
 // Generic scraping function
-const scrapeWebsite = async (url) => {
+const scrapeWebsite = async (url, customSelectors = {}) => {
   try {
     const response = await axios.get(url, {
       headers: {
@@ -28,71 +28,77 @@ const scrapeWebsite = async (url) => {
     const $ = load(response.data);
     const scrapedData = [];
 
-    // Common selectors for different types of content
-    const selectors = {
-      // E-commerce products
-      products: [
-        '.product-item',
-        '.product-card',
-        '.product',
-        '[data-product]',
-        '.item'
-      ],
-      // Articles/Blog posts
-      articles: [
-        'article',
-        '.post',
-        '.article',
-        '.blog-post',
-        '.news-item'
-      ],
-      // General content containers
-      containers: [
-        '.card',
-        '.box',
-        '.item',
-        '.entry',
-        '.content-item'
-      ]
-    };
-
-    // Try different selector strategies
+    // Use custom selectors if provided, otherwise use default strategy
     let elements = $();
-    
-    // First try product selectors
-    for (const selector of selectors.products) {
-      elements = $(selector);
-      if (elements.length > 0) break;
-    }
 
-    // If no products found, try article selectors
-    if (elements.length === 0) {
-      for (const selector of selectors.articles) {
+    if (customSelectors.container && customSelectors.container.trim()) {
+      // Use custom container selector
+      elements = $(customSelectors.container);
+      console.log(`Using custom container selector: ${customSelectors.container}, found ${elements.length} elements`);
+    } else {
+      // Default selector strategy
+      const selectors = {
+        // E-commerce products
+        products: [
+          '.product-item',
+          '.product-card',
+          '.product',
+          '[data-product]',
+          '.item'
+        ],
+        // Articles/Blog posts
+        articles: [
+          'article',
+          '.post',
+          '.article',
+          '.blog-post',
+          '.news-item'
+        ],
+        // General content containers
+        containers: [
+          '.card',
+          '.box',
+          '.item',
+          '.entry',
+          '.content-item'
+        ]
+      };
+
+      // First try product selectors
+      for (const selector of selectors.products) {
         elements = $(selector);
         if (elements.length > 0) break;
       }
-    }
 
-    // If still nothing, try general containers
-    if (elements.length === 0) {
-      for (const selector of selectors.containers) {
-        elements = $(selector);
-        if (elements.length > 0) break;
+      // If no products found, try article selectors
+      if (elements.length === 0) {
+        for (const selector of selectors.articles) {
+          elements = $(selector);
+          if (elements.length > 0) break;
+        }
       }
-    }
 
-    // If still no structured content, try to extract from common elements
-    if (elements.length === 0) {
-      // Look for lists
-      const listItems = $('li');
-      if (listItems.length > 3) {
-        elements = listItems;
-      } else {
-        // Fallback to divs with some content
-        elements = $('div').filter((i, el) => {
-          const text = $(el).text().trim();
-          return text.length > 20 && text.length < 500;
-        });
+      // If still nothing, try general containers
+      if (elements.length === 0) {
+        for (const selector of selectors.containers) {
+          elements = $(selector);
+          if (elements.length > 0) break;
+        }
+      }
+
+      // If still no structured content, try to extract from common elements
+      if (elements.length === 0) {
+        // Look for lists
+        const listItems = $('li');
+        if (listItems.length > 3) {
+          elements = listItems;
+        } else {
+          // Fallback to divs with some content
+          elements = $('div').filter((i, el) => {
+            const text = $(el).text().trim();
+            return text.length > 20 && text.length < 500;
+          });
+        }
       }
     }
 
@@ -113,7 +119,10 @@ const scrapeWebsite = async (url) => {
       };
 
       // Title extraction
-      const titleSelectors = ['h1', 'h2', 'h3', '.title', '.name', '.product-name', '.article-title'];
+      const titleSelectors = customSelectors.title 
+        ? [customSelectors.title] 
+        : ['h1', 'h2', 'h3', '.title', '.name', '.product-name', '.article-title'];
+        
       for (const selector of titleSelectors) {
         const titleEl = $el.find(selector).first();
         if (titleEl.length && titleEl.text().trim()) {
@@ -129,7 +138,10 @@ const scrapeWebsite = async (url) => {
       }
 
       // Description extraction
-      const descSelectors = ['.description', '.summary', '.excerpt', 'p', '.content'];
+      const descSelectors = customSelectors.description 
+        ? [customSelectors.description] 
+        : ['.description', '.summary', '.excerpt', 'p', '.content'];
+        
       for (const selector of descSelectors) {
         const descEl = $el.find(selector).first();
         if (descEl.length && descEl.text().trim()) {
@@ -139,7 +151,8 @@ const scrapeWebsite = async (url) => {
       }
 
       // URL extraction
-      const linkEl = $el.find('a').first();
+      const linkSelector = customSelectors.link || 'a';
+      const linkEl = $el.find(linkSelector).first();
       if (linkEl.length) {
         const href = linkEl.attr('href');
         if (href) {
@@ -148,7 +161,8 @@ const scrapeWebsite = async (url) => {
       }
 
       // Image extraction
-      const imgEl = $el.find('img').first();
+      const imgSelector = customSelectors.image || 'img';
+      const imgEl = $el.find(imgSelector).first();
       if (imgEl.length) {
         const src = imgEl.attr('src') || imgEl.attr('data-src');
         if (src) {
@@ -157,7 +171,10 @@ const scrapeWebsite = async (url) => {
       }
 
       // Price extraction
-      const priceSelectors = ['.price', '.cost', '.amount', '[class*="price"]'];
+      const priceSelectors = customSelectors.price 
+        ? [customSelectors.price] 
+        : ['.price', '.cost', '.amount', '[class*="price"]'];
+        
       for (const selector of priceSelectors) {
         const priceEl = $el.find(selector).first();
         if (priceEl.length && priceEl.text().trim()) {
@@ -167,7 +184,10 @@ const scrapeWebsite = async (url) => {
       }
 
       // Category extraction
-      const categorySelectors = ['.category', '.tag', '.label', '.type'];
+      const categorySelectors = customSelectors.category 
+        ? [customSelectors.category] 
+        : ['.category', '.tag', '.label', '.type'];
+        
       for (const selector of categorySelectors) {
         const catEl = $el.find(selector).first();
         if (catEl.length && catEl.text().trim()) {
@@ -227,7 +247,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { url } = req.body;
+    const { url, customSelectors } = req.body;
 
     if (!url) {
       return res.status(400).json({ error: 'URL is required' });
@@ -241,7 +261,8 @@ export default async function handler(req, res) {
     }
 
     console.log(`Scraping URL: ${url}`);
-    const data = await scrapeWebsite(url);
+    console.log('Custom selectors:', customSelectors);
+    const data = await scrapeWebsite(url, customSelectors);
     console.log(`Scraped ${data.length} items`);
 
     return res.status(200).json({

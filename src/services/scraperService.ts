@@ -1,6 +1,16 @@
 import type { ScrapedData } from '../types/ScrapedData';
 
-export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
+interface CustomSelectors {
+  container: string;
+  title: string;
+  description: string;
+  image: string;
+  link: string;
+  price: string;
+  category: string;
+}
+
+export const scrapeWebsite = async (url: string, customSelectors?: CustomSelectors): Promise<ScrapedData[]> => {
   try {
     // Always use the proxy endpoint in development
     const apiUrl = '/api/scrape';
@@ -13,7 +23,7 @@ export const scrapeWebsite = async (url: string): Promise<ScrapedData[]> => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, customSelectors }),
     });
 
     console.log('Response status:', response.status);
