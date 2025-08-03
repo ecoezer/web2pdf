@@ -9,5 +9,12 @@ export interface ScrapedData {
   date?: string;
   author?: string;
   content?: string;
+  // Sports-specific fields
+  league?: string;
+  homeTeam?: string;
+  awayTeam?: string;
+  score?: string;
+  halftime?: string;
+  matchDate?: string;
   [key: string]: any;
 }

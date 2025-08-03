@@ -28,6 +28,9 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
     const $ = load(response.data);
     const scrapedData = [];
 
+    // Check if this is sports mode (has sports-specific selectors)
+    const isSportsMode = customSelectors.homeTeam || customSelectors.awayTeam || customSelectors.score;
+
     // Use custom selectors if provided, otherwise use default strategy
     let elements = $();
 
@@ -38,6 +41,18 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
     } else {
       // Default selector strategy
       const selectors = {
+        // Sports-specific selectors
+        sports: [
+          '.match-item',
+          '.game-item', 
+          '.fixture',
+          '.match-card',
+          '.score-box',
+          '[class*="match"]',
+          '[class*="game"]',
+          '[class*="fixture"]',
+          '[class*="score"]'
+        ],
         // E-commerce products
         products: [
           '.product-item',
@@ -64,10 +79,20 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
         ]
       };
 
+      // If sports mode, try sports selectors first
+      if (isSportsMode) {
+        for (const selector of selectors.sports) {
+          elements = $(selector);
+          if (elements.length > 0) break;
+        }
+      }
+
       // First try product selectors
-      for (const selector of selectors.products) {
-        elements = $(selector);
-        if (elements.length > 0) break;
+      if (elements.length === 0) {
+        for (const selector of selectors.products) {
+          elements = $(selector);
+          if (elements.length > 0) break;
+        }
       }
 
       // If no products found, try article selectors
@@ -108,26 +133,134 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
       // Extract various data points
       const item = {
         id: `item-${index + 1}`,
-        title: '',
-        description: '',
+        title: '', // Will be league name for sports
+        description: '', // Will be team names for sports
         url: '',
         image: '',
         price: '',
         category: '',
         date: '',
-        author: ''
+        author: '',
+        // Sports-specific fields
+        league: '',
+        homeTeam: '',
+        awayTeam: '',
+        score: '',
+        halftime: '',
+        matchDate: ''
       };
 
-      // Title extraction
-      const titleSelectors = customSelectors.title 
-        ? [customSelectors.title] 
-        : ['h1', 'h2', 'h3', '.title', '.name', '.product-name', '.article-title'];
+      if (isSportsMode) {
+        // Sports-specific extraction
         
-      for (const selector of titleSelectors) {
-        const titleEl = $el.find(selector).first();
-        if (titleEl.length && titleEl.text().trim()) {
-          item.title = cleanText(titleEl.text());
-          break;
+        // League/Competition name
+        const leagueSelectors = customSelectors.title 
+          ? [customSelectors.title] 
+          : ['.league', '.competition', '.tournament', '[class*="league"]', '[class*="competition"]'];
+        
+        for (const selector of leagueSelectors) {
+          const leagueEl = $el.find(selector).first();
+          if (leagueEl.length && leagueEl.text().trim()) {
+            item.league = cleanText(leagueEl.text());
+            item.title = item.league; // Also set as title
+            break;
+          }
+        }
+
+        // Home team
+        const homeTeamSelectors = customSelectors.homeTeam 
+          ? [customSelectors.homeTeam] 
+          : ['.home-team', '.team-home', '[class*="home"]', '.team:first-child'];
+        
+        for (const selector of homeTeamSelectors) {
+          const homeEl = $el.find(selector).first();
+          if (homeEl.length && homeEl.text().trim()) {
+            item.homeTeam = cleanText(homeEl.text());
+            break;
+          }
+        }
+
+        // Away team
+        const awayTeamSelectors = customSelectors.awayTeam 
+          ? [customSelectors.awayTeam] 
+          : ['.away-team', '.team-away', '[class*="away"]', '.team:last-child'];
+        
+        for (const selector of awayTeamSelectors) {
+          const awayEl = $el.find(selector).first();
+          if (awayEl.length && awayEl.text().trim()) {
+            item.awayTeam = cleanText(awayEl.text());
+            break;
+          }
+        }
+
+        // Score
+        const scoreSelectors = customSelectors.score 
+          ? [customSelectors.score] 
+          : ['.score', '.result', '.final-score', '[class*="score"]', '[class*="result"]'];
+        
+        for (const selector of scoreSelectors) {
+          const scoreEl = $el.find(selector).first();
+          if (scoreEl.length && scoreEl.text().trim()) {
+            item.score = cleanText(scoreEl.text());
+            break;
+          }
+        }
+
+        // Halftime score
+        const halftimeSelectors = customSelectors.halftime 
+          ? [customSelectors.halftime] 
+          : ['.halftime', '.ht', '.half-time', '[class*="halftime"]', '[class*="ht"]'];
+        
+        for (const selector of halftimeSelectors) {
+          const htEl = $el.find(selector).first();
+          if (htEl.length && htEl.text().trim()) {
+            item.halftime = cleanText(htEl.text());
+            break;
+          }
+        }
+
+        // Match date
+        const dateSelectors = customSelectors.date 
+          ? [customSelectors.date] 
+          : ['.date', '.time', '.match-date', '.match-time', '[class*="date"]', '[class*="time"]'];
+        
+        for (const selector of dateSelectors) {
+          const dateEl = $el.find(selector).first();
+          if (dateEl.length && dateEl.text().trim()) {
+            item.matchDate = cleanText(dateEl.text());
+            item.date = item.matchDate; // Also set as general date
+            break;
+          }
+        }
+
+        // Create description from team names
+        if (item.homeTeam && item.awayTeam) {
+          item.description = `${item.homeTeam} vs ${item.awayTeam}`;
+        }
+
+        // If no specific league found, try to extract from page title or header
+        if (!item.league) {
+          const pageTitle = $('title').text();
+          const h1Text = $('h1').first().text();
+          if (pageTitle.includes('Bundesliga') || h1Text.includes('Bundesliga')) {
+            item.league = 'Bundesliga';
+            item.title = 'Bundesliga';
+          }
+        }
+      }
+
+      // Title extraction
+      if (!item.title) {
+        const titleSelectors = customSelectors.title 
+          ? [customSelectors.title] 
+          : ['h1', 'h2', 'h3', '.title', '.name', '.product-name', '.article-title'];
+          
+        for (const selector of titleSelectors) {
+          const titleEl = $el.find(selector).first();
+          if (titleEl.length && titleEl.text().trim()) {
+            item.title = cleanText(titleEl.text());
+            break;
+          }
         }
       }
 
@@ -138,15 +271,17 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
       }
 
       // Description extraction
-      const descSelectors = customSelectors.description 
-        ? [customSelectors.description] 
-        : ['.description', '.summary', '.excerpt', 'p', '.content'];
-        
-      for (const selector of descSelectors) {
-        const descEl = $el.find(selector).first();
-        if (descEl.length && descEl.text().trim()) {
-          item.description = cleanText(descEl.text()).substring(0, 200);
-          break;
+      if (!item.description) {
+        const descSelectors = customSelectors.description 
+          ? [customSelectors.description] 
+          : ['.description', '.summary', '.excerpt', 'p', '.content'];
+          
+        for (const selector of descSelectors) {
+          const descEl = $el.find(selector).first();
+          if (descEl.length && descEl.text().trim()) {
+            item.description = cleanText(descEl.text()).substring(0, 200);
+            break;
+          }
         }
       }
 
@@ -197,14 +332,16 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
       }
 
       // Date extraction
-      const dateSelectors = ['.date', '.time', 'time', '[datetime]'];
-      for (const selector of dateSelectors) {
-        const dateEl = $el.find(selector).first();
-        if (dateEl.length) {
-          const dateText = dateEl.text().trim() || dateEl.attr('datetime');
-          if (dateText) {
-            item.date = cleanText(dateText);
-            break;
+      if (!item.date) {
+        const dateSelectors = ['.date', '.time', 'time', '[datetime]'];
+        for (const selector of dateSelectors) {
+          const dateEl = $el.find(selector).first();
+          if (dateEl.length) {
+            const dateText = dateEl.text().trim() || dateEl.attr('datetime');
+            if (dateText) {
+              item.date = cleanText(dateText);
+              break;
+            }
           }
         }
       }
@@ -219,8 +356,8 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
         }
       }
 
-      // Only add items that have at least a title
-      if (item.title && item.title.length > 3) {
+      // Only add items that have at least a title or sports data
+      if ((item.title && item.title.length > 3) || (isSportsMode && (item.homeTeam || item.awayTeam || item.score))) {
         scrapedData.push(item);
       }
     });
