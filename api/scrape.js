@@ -1,5 +1,5 @@
 import axios from 'axios';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 // Helper function to clean text
 const cleanText = (text) => {
@@ -25,7 +25,7 @@ const scrapeWebsite = async (url) => {
       timeout: 10000
     });
 
-    const $ = cheerio.load(response.data);
+    const $ = load(response.data);
     const scrapedData = [];
 
     // Common selectors for different types of content
@@ -212,79 +212,51 @@ const scrapeWebsite = async (url) => {
   }
 };
 
-export const handler = async (event, context) => {
+export default async function handler(req, res) {
   // Handle CORS
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
-  };
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    console.log('Function called with body:', event.body);
-    
-    const { url } = JSON.parse(event.body);
+    const { url } = req.body;
 
     if (!url) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'URL is required' })
-      };
+      return res.status(400).json({ error: 'URL is required' });
     }
 
     // Validate URL
     try {
       new URL(url);
     } catch {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Invalid URL format' })
-      };
+      return res.status(400).json({ error: 'Invalid URL format' });
     }
 
     console.log(`Scraping URL: ${url}`);
     const data = await scrapeWebsite(url);
     console.log(`Scraped ${data.length} items`);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        url,
-        totalItems: data.length,
-        data,
-        scrapedAt: new Date().toISOString()
-      })
-    };
+    return res.status(200).json({
+      success: true,
+      url,
+      totalItems: data.length,
+      data,
+      scrapedAt: new Date().toISOString()
+    });
 
   } catch (error) {
     console.error('API Error:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        success: false,
-        error: error.message || 'Internal server error'
-      })
-    };
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Internal server error'
+    });
   }
-};
+}
