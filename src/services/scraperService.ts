@@ -13,6 +13,10 @@ interface CustomSelectors {
   halftime?: string;
   homeTeam?: string;
   awayTeam?: string;
+  table?: string;
+  statistic?: string;
+  homeValue?: string;
+  awayValue?: string;
 }
 
 export const scrapeWebsite = async (url: string, customSelectors?: CustomSelectors, dataType: string = 'match'): Promise<ScrapedData[]> => {
