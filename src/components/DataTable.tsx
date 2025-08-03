@@ -52,6 +52,112 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
     return String(value);
   };
 
+  // Check if this is sports data (has homeTeam, awayTeam, score)
+  const isSportsData = data.length > 0 && (data[0].homeTeam || data[0].awayTeam || data[0].score);
+
+  if (isSportsData) {
+    return (
+      <div className="space-y-4">
+        {/* Statistics Table - Sports Style */}
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4">
+            <h2 className="text-xl font-bold text-center">İstatistikler</h2>
+          </div>
+          
+          {/* Table Content */}
+          <div className="divide-y divide-gray-200">
+            {currentData.map((item, index) => (
+              <div key={item.id || index} className="bg-gray-50 py-3 px-4">
+                <div className="grid grid-cols-5 gap-4 items-center">
+                  {/* Home Team Section */}
+                  <div className="flex items-center justify-end space-x-3">
+                    <div className="flex-1 text-right">
+                      <div className="bg-blue-500 h-6 rounded-l-md relative overflow-hidden">
+                        <div className="absolute inset-0 bg-blue-600 opacity-80"></div>
+                      </div>
+                    </div>
+                    <div className="text-blue-700 font-bold text-lg min-w-[60px] text-right">
+                      {item.homeTeam || '-'}
+                    </div>
+                  </div>
+
+                  {/* Center Section - Match Info */}
+                  <div className="text-center">
+                    <div className="text-gray-700 font-medium text-sm mb-1">
+                      Maç Sonucu
+                    </div>
+                    <div className="text-gray-900 font-bold text-lg">
+                      {item.score || 'vs'}
+                    </div>
+                  </div>
+
+                  {/* Away Team Section */}
+                  <div className="flex items-center space-x-3">
+                    <div className="text-orange-600 font-bold text-lg min-w-[60px] text-left">
+                      {item.awayTeam || '-'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="bg-orange-400 h-6 rounded-r-md relative overflow-hidden">
+                        <div className="absolute inset-0 bg-orange-500 opacity-80"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              {startIndex + 1}-{Math.min(endIndex, data.length)} / {data.length} maç gösteriliyor
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <div className="flex space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      className={`px-3 py-1 rounded-md text-sm ${
+                        currentPage === page
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Regular table for non-sports data
   return (
     <div className="space-y-4">
       {/* Column Visibility Controls */}
