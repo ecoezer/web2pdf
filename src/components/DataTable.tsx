@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import type { ScrapedData } from '../types/ScrapedData';
 
 interface DataTableProps {
@@ -20,51 +20,99 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
+  // Check if data contains statistics
+  const isStatisticsData = currentData.some(item => 
+    item.statistic || item.homeValue || item.awayValue
+  );
   return (
     <div className="space-y-4">
-      {/* Match Results Table */}
+      {/* Results Table */}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4">
-          <h2 className="text-xl font-bold text-center">Maç Sonuçları</h2>
+        <div className={`text-white py-4 ${
+          isStatisticsData 
+            ? 'bg-gradient-to-r from-green-600 to-green-700'
+            : 'bg-gradient-to-r from-blue-600 to-blue-700'
+        }`}>
+          <h2 className="text-xl font-bold text-center flex items-center justify-center">
+            {isStatisticsData ? (
+              <>
+                <BarChart3 className="w-6 h-6 mr-2" />
+                İstatistikler
+              </>
+            ) : (
+              'Maç Sonuçları'
+            )}
+          </h2>
         </div>
         
         {/* Table Content */}
         <div className="divide-y divide-gray-200">
           {currentData.map((item, index) => (
             <div key={item.id || index} className="bg-gray-50 py-4 px-6">
-              <div className="flex items-center justify-between">
-                {/* Home Team */}
-                <div className="flex items-center space-x-4 flex-1">
-                  <div className="text-right flex-1">
-                    <div className="text-blue-700 font-bold text-xl">
-                      {item.homeTeam || 'Ev Sahibi'}
+              {isStatisticsData ? (
+                /* Statistics Layout */
+                <div className="flex items-center justify-between">
+                  {/* Home Value */}
+                  <div className="flex items-center space-x-4 flex-1">
+                    <div className="text-right flex-1">
+                      <div className="text-green-700 font-bold text-xl">
+                        {item.homeValue || '-'}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Score Section */}
-                <div className="text-center px-8">
-                  <div className="text-red-600 font-bold text-sm mb-1">MS</div>
-                  <div className="text-blue-900 font-bold text-3xl mb-1">
-                    {item.score || 'vs'}
-                  </div>
-                  {item.halftime && (
-                    <div className="text-gray-600 text-sm">
-                      İY: {item.halftime}
+                  {/* Statistic Name */}
+                  <div className="text-center px-8">
+                    <div className="text-green-900 font-bold text-lg">
+                      {item.statistic || item.title || 'İstatistik'}
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                {/* Away Team */}
-                <div className="flex items-center space-x-4 flex-1">
-                  <div className="text-left flex-1">
-                    <div className="text-blue-700 font-bold text-xl">
-                      {item.awayTeam || 'Misafir'}
+                  {/* Away Value */}
+                  <div className="flex items-center space-x-4 flex-1">
+                    <div className="text-left flex-1">
+                      <div className="text-green-700 font-bold text-xl">
+                        {item.awayValue || '-'}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* Match Results Layout */
+                <div className="flex items-center justify-between">
+                  {/* Home Team */}
+                  <div className="flex items-center space-x-4 flex-1">
+                    <div className="text-right flex-1">
+                      <div className="text-blue-700 font-bold text-xl">
+                        {item.homeTeam || 'Ev Sahibi'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Score Section */}
+                  <div className="text-center px-8">
+                    <div className="text-red-600 font-bold text-sm mb-1">MS</div>
+                    <div className="text-blue-900 font-bold text-3xl mb-1">
+                      {item.score || 'vs'}
+                    </div>
+                    {item.halftime && (
+                      <div className="text-gray-600 text-sm">
+                        İY: {item.halftime}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Away Team */}
+                  <div className="flex items-center space-x-4 flex-1">
+                    <div className="text-left flex-1">
+                      <div className="text-blue-700 font-bold text-xl">
+                        {item.awayTeam || 'Misafir'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -74,7 +122,7 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            {startIndex + 1}-{Math.min(endIndex, data.length)} / {data.length} maç gösteriliyor
+            {startIndex + 1}-{Math.min(endIndex, data.length)} / {data.length} {isStatisticsData ? 'istatistik' : 'maç'} gösteriliyor
           </div>
           <div className="flex items-center space-x-2">
             <button

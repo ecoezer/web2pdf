@@ -15,12 +15,13 @@ interface CustomSelectors {
   awayTeam?: string;
 }
 
-export const scrapeWebsite = async (url: string, customSelectors?: CustomSelectors): Promise<ScrapedData[]> => {
+export const scrapeWebsite = async (url: string, customSelectors?: CustomSelectors, dataType: string = 'match'): Promise<ScrapedData[]> => {
   try {
     // Always use the proxy endpoint in development
     const apiUrl = '/api/scrape';
       
     console.log('Scraping URL:', url);
+    console.log('Data type:', dataType);
     console.log('API URL:', apiUrl);
     
     const response = await fetch(apiUrl, {
@@ -28,7 +29,7 @@ export const scrapeWebsite = async (url: string, customSelectors?: CustomSelecto
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ url, customSelectors }),
+      body: JSON.stringify({ url, customSelectors, dataType }),
     });
 
     console.log('Response status:', response.status);

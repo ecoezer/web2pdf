@@ -6,6 +6,131 @@ const cleanText = (text) => {
   return text ? text.trim().replace(/\s+/g, ' ') : '';
 };
 
+// Statistics scraping function
+const scrapeStatisticsData = async (url, selectors = {}) => {
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      },
+      timeout: 10000
+    });
+
+    const $ = load(response.data);
+    const scrapedData = [];
+
+    // Try to find statistics tables
+    const tableSelectors = [
+      'table',
+      '.statistics-table',
+      '.stats-table',
+      '.match-stats',
+      '[class*="stat"]',
+      '[class*="table"]'
+    ];
+
+    let foundTable = false;
+
+    for (const tableSelector of tableSelectors) {
+      const tables = $(tableSelector);
+      
+      tables.each((tableIndex, table) => {
+        const $table = $(table);
+        const rows = $table.find('tr');
+        
+        if (rows.length > 1) { // At least header + 1 data row
+          foundTable = true;
+          
+          rows.each((rowIndex, row) => {
+            const $row = $(row);
+            const cells = $row.find('td, th');
+            
+            if (cells.length >= 2) { // At least 2 columns
+              const item = {
+                id: `stat-${tableIndex}-${rowIndex}`,
+                title: '',
+                description: '',
+                statistic: '',
+                homeValue: '',
+                awayValue: '',
+                category: ''
+              };
+
+              // Extract cell data
+              cells.each((cellIndex, cell) => {
+                const $cell = $(cell);
+                const cellText = cleanText($cell.text());
+                
+                if (cellIndex === 0) {
+                  item.homeValue = cellText;
+                } else if (cellIndex === 1) {
+                  item.statistic = cellText;
+                } else if (cellIndex === 2) {
+                  item.awayValue = cellText;
+                }
+              });
+
+              // Create title and description
+              if (item.statistic) {
+                item.title = item.statistic;
+                item.description = `${item.homeValue} - ${item.statistic} - ${item.awayValue}`;
+              }
+
+              // Only add if we have meaningful data
+              if (item.statistic && (item.homeValue || item.awayValue)) {
+                scrapedData.push(item);
+              }
+            }
+          });
+        }
+      });
+      
+      if (foundTable) break;
+    }
+
+    // If no tables found, try to find statistics in other formats
+    if (!foundTable) {
+      const statSelectors = [
+        '.stat-item',
+        '.statistic',
+        '[class*="stat"]',
+        'div:contains("%")',
+        'span:contains("%")'
+      ];
+
+      for (const statSelector of statSelectors) {
+        const elements = $(statSelector);
+        
+        elements.each((index, element) => {
+          const $el = $(element);
+          const text = cleanText($el.text());
+          
+          if (text && (text.includes('%') || /\d+/.test(text))) {
+            const item = {
+              id: `stat-${index}`,
+              title: text,
+              description: text,
+              statistic: text,
+              homeValue: '',
+              awayValue: '',
+              category: 'general'
+            };
+            
+            scrapedData.push(item);
+          }
+        });
+        
+        if (scrapedData.length > 0) break;
+      }
+    }
+
+    return scrapedData;
+  } catch (error) {
+    console.error('Statistics scraping error:', error.message);
+    throw new Error(`Statistics scraping failed: ${error.message}`);
+  }
+};
+
 // Match data scraping function
 const scrapeMatchData = async (url, selectors = {}) => {
   try {
@@ -175,7 +300,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { url, customSelectors } = req.body;
+    const { url, customSelectors, dataType = 'match' } = req.body;
 
     if (!url) {
       return res.status(400).json({ error: 'URL is required' });
@@ -188,15 +313,22 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid URL format' });
     }
 
-    console.log(`Scraping match data from URL: ${url}`);
+    console.log(`Scraping ${dataType} data from URL: ${url}`);
     console.log('Using selectors:', customSelectors);
     
-    const data = await scrapeMatchData(url, customSelectors);
-    console.log(`Scraped ${data.length} matches`);
+    let data;
+    if (dataType === 'statistics') {
+      data = await scrapeStatisticsData(url, customSelectors);
+      console.log(`Scraped ${data.length} statistics`);
+    } else {
+      data = await scrapeMatchData(url, customSelectors);
+      console.log(`Scraped ${data.length} matches`);
+    }
 
     return res.status(200).json({
       success: true,
       url,
+      dataType,
       totalItems: data.length,
       data,
       scrapedAt: new Date().toISOString()

@@ -16,5 +16,9 @@ export interface ScrapedData {
   score?: string;
   halftime?: string;
   matchDate?: string;
+  // Statistics-specific fields
+  statistic?: string;
+  homeValue?: string;
+  awayValue?: string;
   [key: string]: any;
 }
