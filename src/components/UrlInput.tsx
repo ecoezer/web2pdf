@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, AlertCircle, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, AlertCircle, Target, ChevronDown, ChevronUp, Trophy } from 'lucide-react';
 import type { ScrapedData } from '../types/ScrapedData';
 import { scrapeWebsite } from '../services/scraperService';
 
@@ -12,6 +12,7 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [presetMode, setPresetMode] = useState('custom'); // 'custom' or 'sports'
   const [customSelectors, setCustomSelectors] = useState({
     container: '',
     title: '',
@@ -21,6 +22,18 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
     price: '',
     category: ''
   });
+
+  // Sports-specific selectors for match data
+  const sportsSelectors = {
+    container: '.match-item, .game-item, .fixture, .match-card, .score-box, [class*="match"], [class*="game"], [class*="fixture"]',
+    title: '.league, .competition, .tournament, [class*="league"], [class*="competition"]',
+    description: '.teams, .vs, .match-teams, [class*="team"]',
+    date: '.date, .time, .match-date, .match-time, [class*="date"], [class*="time"]',
+    score: '.score, .result, .final-score, [class*="score"], [class*="result"]',
+    halftime: '.halftime, .ht, .half-time, [class*="halftime"], [class*="ht"]',
+    homeTeam: '.home-team, .team-home, [class*="home"]',
+    awayTeam: '.away-team, .team-away, [class*="away"]'
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +55,8 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
     onLoadingChange(true);
 
     try {
-      const data = await scrapeWebsite(url, customSelectors);
+      const selectorsToUse = presetMode === 'sports' ? sportsSelectors : customSelectors;
+      const data = await scrapeWebsite(url, selectorsToUse);
       onDataScraped(data, url);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
@@ -71,6 +85,16 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
       category: ''
     });
   };
+
+  const setSportsMode = () => {
+    setPresetMode('sports');
+    setShowAdvanced(true);
+  };
+
+  const setCustomMode = () => {
+    setPresetMode('custom');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -90,8 +114,54 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
         </div>
       </div>
 
+      {/* Preset Mode Selection */}
+      <div className="flex space-x-4 p-4 bg-gray-50 rounded-lg">
+        <button
+          type="button"
+          onClick={setSportsMode}
+          className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+            presetMode === 'sports'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <Trophy className="w-4 h-4 mr-2" />
+          Spor Verileri (Maç Sonuçları)
+        </button>
+        <button
+          type="button"
+          onClick={setCustomMode}
+          className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+            presetMode === 'custom'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <Target className="w-4 h-4 mr-2" />
+          Özel Hedefleme
+        </button>
+      </div>
+
+      {presetMode === 'sports' && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center mb-2">
+            <Trophy className="w-5 h-5 text-blue-600 mr-2" />
+            <h4 className="font-medium text-blue-800">Spor Verileri Modu Aktif</h4>
+          </div>
+          <p className="text-sm text-blue-700">
+            Bu mod özellikle spor sitelerinden maç sonuçları, takım isimleri, lig bilgileri, 
+            tarih ve ilk yarı sonuçlarını çekmek için optimize edilmiştir.
+          </p>
+          <div className="mt-3 text-xs text-blue-600">
+            <strong>Çekilecek veriler:</strong> Lig ismi, Tarih, Ev sahibi takım, Deplasman takımı, 
+            Maç sonucu, İlk yarı sonucu
+          </div>
+        </div>
+      )}
+
       {/* Advanced Targeting Section */}
-      <div className="border-t pt-4">
+      {presetMode === 'custom' && (
+        <div className="border-t pt-4">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
@@ -203,7 +273,9 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
             </div>
           </div>
         )}
-      </div>
+        </div>
+      )}
+
       {error && (
         <div className="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
           <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
@@ -216,7 +288,7 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
         className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors font-medium flex items-center justify-center"
       >
         <Search className="w-5 h-5 mr-2" />
-        Veriyi Çek
+        {presetMode === 'sports' ? 'Maç Verilerini Çek' : 'Veriyi Çek'}
       </button>
     </form>
   );
