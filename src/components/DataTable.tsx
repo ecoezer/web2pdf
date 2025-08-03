@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ScrapedData } from '../types/ScrapedData';
 
 interface DataTableProps {
@@ -9,30 +9,6 @@ interface DataTableProps {
 const DataTable: React.FC<DataTableProps> = ({ data }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set());
-
-  // Get all unique keys from the data
-  const allKeys = Array.from(
-    new Set(data.flatMap(item => Object.keys(item)))
-  ).filter(key => key !== 'id');
-
-  // Initialize visible columns on first render
-  React.useEffect(() => {
-    if (visibleColumns.size === 0 && allKeys.length > 0) {
-      const defaultColumns = allKeys.slice(0, 5); // Show first 5 columns by default
-      setVisibleColumns(new Set(defaultColumns));
-    }
-  }, [allKeys, visibleColumns.size]);
-
-  const toggleColumn = (key: string) => {
-    const newVisibleColumns = new Set(visibleColumns);
-    if (newVisibleColumns.has(key)) {
-      newVisibleColumns.delete(key);
-    } else {
-      newVisibleColumns.add(key);
-    }
-    setVisibleColumns(newVisibleColumns);
-  };
 
   // Pagination
   const totalPages = Math.ceil(data.length / itemsPerPage);
@@ -44,203 +20,61 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
-  const formatValue = (value: any): string => {
-    if (value === null || value === undefined) return '-';
-    if (typeof value === 'string' && value.length > 100) {
-      return value.substring(0, 100) + '...';
-    }
-    return String(value);
-  };
-
-  // Check if this is sports data (has homeTeam, awayTeam, score)
-  const isSportsData = data.length > 0 && (data[0].homeTeam || data[0].awayTeam || data[0].score);
-
-  if (isSportsData) {
-    return (
-      <div className="space-y-4">
-        {/* Statistics Table - Sports Style */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4">
-            <h2 className="text-xl font-bold text-center">İstatistikler</h2>
-          </div>
-          
-          {/* Table Content */}
-          <div className="divide-y divide-gray-200">
-            {currentData.map((item, index) => (
-              <div key={item.id || index} className="bg-gray-50 py-3 px-4">
-                <div className="grid grid-cols-5 gap-4 items-center">
-                  {/* Home Team Section */}
-                  <div className="flex items-center justify-end space-x-3">
-                    <div className="flex-1 text-right">
-                      <div className="bg-blue-500 h-6 rounded-l-md relative overflow-hidden">
-                        <div className="absolute inset-0 bg-blue-600 opacity-80"></div>
-                      </div>
-                    </div>
-                    <div className="text-blue-700 font-bold text-lg min-w-[60px] text-right">
-                      {item.homeTeam || '-'}
+  return (
+    <div className="space-y-4">
+      {/* Match Results Table */}
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4">
+          <h2 className="text-xl font-bold text-center">Maç Sonuçları</h2>
+        </div>
+        
+        {/* Table Content */}
+        <div className="divide-y divide-gray-200">
+          {currentData.map((item, index) => (
+            <div key={item.id || index} className="bg-gray-50 py-4 px-6">
+              <div className="flex items-center justify-between">
+                {/* Home Team */}
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className="text-right flex-1">
+                    <div className="text-blue-700 font-bold text-xl">
+                      {item.homeTeam || 'Ev Sahibi'}
                     </div>
                   </div>
+                </div>
 
-                  {/* Center Section - Match Info */}
-                  <div className="text-center">
-                    <div className="text-gray-700 font-medium text-sm mb-1">
-                      Maç Sonucu
-                    </div>
-                    <div className="text-gray-900 font-bold text-lg">
-                      {item.score || 'vs'}
-                    </div>
+                {/* Score Section */}
+                <div className="text-center px-8">
+                  <div className="text-red-600 font-bold text-sm mb-1">MS</div>
+                  <div className="text-blue-900 font-bold text-3xl mb-1">
+                    {item.score || 'vs'}
                   </div>
-
-                  {/* Away Team Section */}
-                  <div className="flex items-center space-x-3">
-                    <div className="text-orange-600 font-bold text-lg min-w-[60px] text-left">
-                      {item.awayTeam || '-'}
+                  {item.halftime && (
+                    <div className="text-gray-600 text-sm">
+                      İY: {item.halftime}
                     </div>
-                    <div className="flex-1">
-                      <div className="bg-orange-400 h-6 rounded-r-md relative overflow-hidden">
-                        <div className="absolute inset-0 bg-orange-500 opacity-80"></div>
-                      </div>
+                  )}
+                </div>
+
+                {/* Away Team */}
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className="text-left flex-1">
+                    <div className="text-blue-700 font-bold text-xl">
+                      {item.awayTeam || 'Misafir'}
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              {startIndex + 1}-{Math.min(endIndex, data.length)} / {data.length} maç gösteriliyor
             </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              
-              <div className="flex space-x-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const page = i + 1;
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => goToPage(page)}
-                      className={`px-3 py-1 rounded-md text-sm ${
-                        currentPage === page
-                          ? 'bg-blue-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Regular table for non-sports data
-  return (
-    <div className="space-y-4">
-      {/* Column Visibility Controls */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Görünür Sütunlar:</h4>
-        <div className="flex flex-wrap gap-2">
-          {allKeys.map(key => (
-            <button
-              key={key}
-              onClick={() => toggleColumn(key)}
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                visibleColumns.has(key)
-                  ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                  : 'bg-gray-100 text-gray-600 border border-gray-200'
-              }`}
-            >
-              {visibleColumns.has(key) ? (
-                <Eye className="w-3 h-3 mr-1" />
-              ) : (
-                <EyeOff className="w-3 h-3 mr-1" />
-              )}
-              {key}
-            </button>
           ))}
         </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {Array.from(visibleColumns).map(key => (
-                <th
-                  key={key}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {key}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {currentData.map((item, index) => (
-              <tr key={item.id || index} className="hover:bg-gray-50">
-                {Array.from(visibleColumns).map(key => (
-                  <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {key === 'image' && item[key] ? (
-                      <img 
-                        src={item[key]} 
-                        alt="Preview" 
-                        className="w-12 h-12 object-cover rounded"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : key === 'url' && item[key] ? (
-                      <a 
-                        href={item[key]} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-800 underline"
-                      >
-                        Link
-                      </a>
-                    ) : (
-                      <span title={String(item[key] || '-')}>
-                        {formatValue(item[key])}
-                      </span>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            {startIndex + 1}-{Math.min(endIndex, data.length)} / {data.length} öğe gösteriliyor
+            {startIndex + 1}-{Math.min(endIndex, data.length)} / {data.length} maç gösteriliyor
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -260,7 +94,7 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
                     onClick={() => goToPage(page)}
                     className={`px-3 py-1 rounded-md text-sm ${
                       currentPage === page
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-blue-600 text-white'
                         : 'border border-gray-300 hover:bg-gray-50'
                     }`}
                   >
