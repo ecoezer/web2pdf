@@ -25,14 +25,9 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
 
   // Sports-specific selectors for match data
   const sportsSelectors = {
-    container: '.match-item, .game-item, .fixture, .match-card, .score-box, [class*="match"], [class*="game"], [class*="fixture"]',
-    title: '.league, .competition, .tournament, [class*="league"], [class*="competition"]',
-    description: '.teams, .vs, .match-teams, [class*="team"]',
-    date: '.date, .time, .match-date, .match-time, [class*="date"], [class*="time"]',
-    score: '.score, .result, .final-score, [class*="score"], [class*="result"]',
-    halftime: '.halftime, .ht, .half-time, [class*="halftime"], [class*="ht"]',
-    homeTeam: '.home-team, .team-home, [class*="home"]',
-    awayTeam: '.away-team, .team-away, [class*="away"]'
+    homeTeam: 'a.left-block-team-name',
+    awayTeam: 'a.r-left-block-team-name',
+    score: 'div.match-score'
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,12 +144,10 @@ const UrlInput: React.FC<UrlInputProps> = ({ onDataScraped, onLoadingChange }) =
             <h4 className="font-medium text-blue-800">Spor Verileri Modu Aktif</h4>
           </div>
           <p className="text-sm text-blue-700">
-            Bu mod özellikle spor sitelerinden maç sonuçları, takım isimleri, lig bilgileri, 
-            tarih ve ilk yarı sonuçlarını çekmek için optimize edilmiştir.
+            Bu mod sadece ev sahibi takım, misafir takım ve maç sonucu verilerini çeker.
           </p>
           <div className="mt-3 text-xs text-blue-600">
-            <strong>Çekilecek veriler:</strong> Lig ismi, Tarih, Ev sahibi takım, Deplasman takımı, 
-            Maç sonucu, İlk yarı sonucu
+            <strong>Çekilecek veriler:</strong> Ev sahibi takım, Misafir takım, Maç sonucu
           </div>
         </div>
       )}

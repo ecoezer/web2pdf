@@ -43,15 +43,10 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
       const selectors = {
         // Sports-specific selectors
         sports: [
-          '.match-item',
-          '.game-item', 
-          '.fixture',
-          '.match-card',
-          '.score-box',
-          '[class*="match"]',
-          '[class*="game"]',
-          '[class*="fixture"]',
-          '[class*="score"]'
+          'div',
+          'article',
+          'section',
+          '.container'
         ],
         // E-commerce products
         products: [
@@ -153,24 +148,10 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
       if (isSportsMode) {
         // Sports-specific extraction
         
-        // League/Competition name
-        const leagueSelectors = customSelectors.title 
-          ? [customSelectors.title] 
-          : ['.league', '.competition', '.tournament', '[class*="league"]', '[class*="competition"]'];
-        
-        for (const selector of leagueSelectors) {
-          const leagueEl = $el.find(selector).first();
-          if (leagueEl.length && leagueEl.text().trim()) {
-            item.league = cleanText(leagueEl.text());
-            item.title = item.league; // Also set as title
-            break;
-          }
-        }
-
         // Home team
         const homeTeamSelectors = customSelectors.homeTeam 
           ? [customSelectors.homeTeam] 
-          : ['.home-team', '.team-home', '[class*="home"]', '.team:first-child'];
+          : ['a.left-block-team-name'];
         
         for (const selector of homeTeamSelectors) {
           const homeEl = $el.find(selector).first();
@@ -183,7 +164,7 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
         // Away team
         const awayTeamSelectors = customSelectors.awayTeam 
           ? [customSelectors.awayTeam] 
-          : ['.away-team', '.team-away', '[class*="away"]', '.team:last-child'];
+          : ['a.r-left-block-team-name'];
         
         for (const selector of awayTeamSelectors) {
           const awayEl = $el.find(selector).first();
@@ -196,7 +177,7 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
         // Score
         const scoreSelectors = customSelectors.score 
           ? [customSelectors.score] 
-          : ['.score', '.result', '.final-score', '[class*="score"]', '[class*="result"]'];
+          : ['div.match-score'];
         
         for (const selector of scoreSelectors) {
           const scoreEl = $el.find(selector).first();
@@ -206,46 +187,14 @@ const scrapeWebsite = async (url, customSelectors = {}) => {
           }
         }
 
-        // Halftime score
-        const halftimeSelectors = customSelectors.halftime 
-          ? [customSelectors.halftime] 
-          : ['.halftime', '.ht', '.half-time', '[class*="halftime"]', '[class*="ht"]'];
-        
-        for (const selector of halftimeSelectors) {
-          const htEl = $el.find(selector).first();
-          if (htEl.length && htEl.text().trim()) {
-            item.halftime = cleanText(htEl.text());
-            break;
-          }
-        }
-
-        // Match date
-        const dateSelectors = customSelectors.date 
-          ? [customSelectors.date] 
-          : ['.date', '.time', '.match-date', '.match-time', '[class*="date"]', '[class*="time"]'];
-        
-        for (const selector of dateSelectors) {
-          const dateEl = $el.find(selector).first();
-          if (dateEl.length && dateEl.text().trim()) {
-            item.matchDate = cleanText(dateEl.text());
-            item.date = item.matchDate; // Also set as general date
-            break;
-          }
-        }
-
         // Create description from team names
         if (item.homeTeam && item.awayTeam) {
           item.description = `${item.homeTeam} vs ${item.awayTeam}`;
         }
-
-        // If no specific league found, try to extract from page title or header
-        if (!item.league) {
-          const pageTitle = $('title').text();
-          const h1Text = $('h1').first().text();
-          if (pageTitle.includes('Bundesliga') || h1Text.includes('Bundesliga')) {
-            item.league = 'Bundesliga';
-            item.title = 'Bundesliga';
-          }
+        
+        // Set title from team names if available
+        if (item.homeTeam && item.awayTeam) {
+          item.title = `${item.homeTeam} - ${item.awayTeam}`;
         }
       }
 
