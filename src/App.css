@@ -33,6 +33,15 @@
   transition: all 0.2s ease-in-out;
 }
 
+/* Statistics Progress Bars */
+.stats-progress-bar {
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stats-row:hover .stats-progress-bar {
+  transform: scaleY(1.1);
+}
+
 /* Loading animation */
 @keyframes spin {
   to {
