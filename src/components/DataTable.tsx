@@ -44,15 +44,14 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
       {/* Results Table */}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
-        <div className={`text-white py-6 ${
+        <div className={`text-white py-4 ${
           isStatisticsData 
-            ? 'bg-blue-800'
+            ? 'bg-blue-700'
             : 'bg-gradient-to-r from-blue-600 to-blue-700'
         }`}>
-          <h2 className="text-xl font-bold text-center flex items-center justify-center">
+          <h2 className="text-lg font-bold text-center flex items-center justify-center">
             {isStatisticsData ? (
               <>
-                <BarChart3 className="w-6 h-6 mr-2" />
                 İstatistikler
               </>
             ) : (
@@ -65,60 +64,68 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
         </div>
         
         {/* Table Content */}
-        <div className={isStatisticsData ? "divide-y divide-gray-200 bg-white" : "divide-y divide-gray-100"}>
+        <div className={isStatisticsData ? "bg-white" : "divide-y divide-gray-100"}>
           {currentData.map((item, index) => (
-            <div key={item.id || index} className={`py-4 px-6 transition-colors ${
+            <div key={item.id || index} className={`transition-colors ${
               isStatisticsData 
-                ? "bg-white hover:bg-gray-25" 
+                ? "bg-white hover:bg-gray-50" 
                 : "bg-white hover:bg-gray-50"
             }`}>
               {isStatisticsData ? (
                 /* Statistics Layout - Matching the image */
-                <div className="flex items-center bg-gray-50 py-3 px-4 rounded-lg">
-                  {/* Left side - Home team progress bar and value */}
-                  <div className="flex items-center flex-1">
-                    {/* Home Value */}
-                    <div className="text-blue-800 font-bold text-lg min-w-[80px] text-right mr-3">
-                      {item.homeValue || '0'}
-                    </div>
-                    {/* Home Progress Bar */}
-                    <div className="flex-1 bg-blue-100 rounded-sm h-6 mr-4 relative overflow-hidden">
+                <div className="flex items-center bg-gray-100 py-2 px-3 border-b border-gray-200">
+                  {/* Left Progress Bar Container */}
+                  <div className="flex items-center w-1/3">
+                    {/* Left Progress Bar Background */}
+                    <div className="flex-1 bg-blue-200 h-6 mr-2 relative">
                       {(() => {
-                        const { homePercent } = calculatePercentage(item.homeValue || '0', item.awayValue || '0');
+                        const homeVal = parseFloat(item.homeValue?.replace('%', '') || '0');
+                        const awayVal = parseFloat(item.awayValue?.replace('%', '') || '0');
+                        const total = homeVal + awayVal;
+                        const homePercent = total > 0 ? (homeVal / total) * 100 : 50;
+                        
                         return (
                           <div 
-                            className="bg-blue-600 h-6 transition-all duration-700 ease-out"
+                            className="bg-blue-600 h-6 transition-all duration-500"
                             style={{ width: `${homePercent}%` }}
                           />
                         );
                       })()}
                     </div>
+                    {/* Left Value */}
+                    <div className="text-blue-800 font-bold text-lg min-w-[60px] text-right">
+                      {item.homeValue || '0'}
+                    </div>
                   </div>
 
                   {/* Center - Statistic Name */}
-                  <div className="px-6 text-center min-w-[180px]">
-                    <div className="text-gray-800 font-semibold text-base whitespace-nowrap">
+                  <div className="w-1/3 text-center px-4">
+                    <div className="text-gray-800 font-semibold text-base">
                       {item.statistic || item.title || 'İstatistik'}
                     </div>
                   </div>
 
-                  {/* Right side - Away team progress bar and value */}
-                  <div className="flex items-center flex-1">
-                    {/* Away Progress Bar */}
-                    <div className="flex-1 bg-orange-100 rounded-sm h-6 ml-4 relative overflow-hidden">
+                  {/* Right Progress Bar Container */}
+                  <div className="flex items-center w-1/3">
+                    {/* Right Value */}
+                    <div className="text-orange-700 font-bold text-lg min-w-[60px] text-left">
+                      {item.awayValue || '0'}
+                    </div>
+                    {/* Right Progress Bar Background */}
+                    <div className="flex-1 bg-orange-200 h-6 ml-2 relative">
                       {(() => {
-                        const { awayPercent } = calculatePercentage(item.homeValue || '0', item.awayValue || '0');
+                        const homeVal = parseFloat(item.homeValue?.replace('%', '') || '0');
+                        const awayVal = parseFloat(item.awayValue?.replace('%', '') || '0');
+                        const total = homeVal + awayVal;
+                        const awayPercent = total > 0 ? (awayVal / total) * 100 : 50;
+                        
                         return (
                           <div 
-                            className="bg-orange-500 h-6 transition-all duration-700 ease-out"
+                            className="bg-orange-500 h-6 transition-all duration-500"
                             style={{ width: `${awayPercent}%` }}
                           />
                         );
                       })()}
-                    </div>
-                    {/* Away Value */}
-                    <div className="text-orange-600 font-bold text-lg min-w-[80px] text-left ml-3">
-                      {item.awayValue || '0'}
                     </div>
                   </div>
                 </div>
